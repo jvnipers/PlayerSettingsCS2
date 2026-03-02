@@ -13,8 +13,8 @@ namespace PlayerSettings
 {
     internal static class Storage
     {
-        private static IAnyBase db;
-        private static string table;
+        private static IAnyBase db = null!;
+        private static string table = string.Empty;
 
         public static void Init()
         {
@@ -31,7 +31,11 @@ namespace PlayerSettings
                 db.Set(AnyBaseLib.Bases.CommitMode.AutoCommit, PlayerSettingsCore.plugin.Config.DatabaseParams.Name, PlayerSettingsCore.plugin.Config.DatabaseParams.Host, PlayerSettingsCore.plugin.Config.DatabaseParams.User, PlayerSettingsCore.plugin.Config.DatabaseParams.Password);
             }
 
-            db.Init();
+            if (!db.Init())
+            {
+                Console.WriteLine("[PlayerSettings] Failed to initialize database connection. Storage will not be available.");
+                return;
+            }
             db.QueryAsync($"CREATE TABLE IF NOT EXISTS `{table}users` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `steam` VARCHAR(255) NOT NULL)", null, (_) =>
             {
                 db.QueryAsync($"CREATE TABLE IF NOT EXISTS `{table}values` (`user_id` INT, `param` VARCHAR(255) NOT NULL, `value` VARCHAR(255) NOT NULL)", null, (_) =>
@@ -50,15 +54,15 @@ namespace PlayerSettings
             {
                 if (data.Count > 0)
                 {
-                    callback(int.Parse(data[0][0]));
+                    callback(int.Parse(data[0][0]!));
                 }
                 else                
-                    db.QueryAsync("INSERT INTO `" + table + "users` (`steam`) VALUES ('{ARG}'); SELECT `id` FROM `" + table + "users` WHERE `steam` = '{ARG}'", new List<string>([steamid.ToString(), steamid.ToString()]), (data) => callback(int.Parse(data[0][0])));
+                    db.QueryAsync("INSERT INTO `" + table + "users` (`steam`) VALUES ('{ARG}'); SELECT `id` FROM `" + table + "users` WHERE `steam` = '{ARG}'", new List<string>([steamid.ToString(), steamid.ToString()]), (data) => callback(int.Parse(data[0][0]!)));
             });
             
         }
 
-        internal static void LoadSettings(int userid, Action<List<List<string>>> action)
+        internal static void LoadSettings(int userid, Action<List<List<string?>>> action)
         {
             db.QueryAsync("SELECT `param`, `value` FROM `" + table + "values` WHERE `user_id` = {ARG}", new List<string>([userid.ToString()]), action);
         }
