@@ -11,7 +11,7 @@ namespace PlayerSettings
 {
     internal static class Migrate
     {
-        static IAnyBase sqlite, mysql;
+        static IAnyBase sqlite = null!, mysql = null!;
 
         internal static void Init(IAnyBase mysql)
         {
@@ -24,7 +24,7 @@ namespace PlayerSettings
         }
 
 
-        private static void StartMigrate(List<List<string>> res)
+        private static void StartMigrate(List<List<string?>> res)
         {
             if (res[0][0] == "0")
                 Task.Run(MigrateUsers);
@@ -35,7 +35,7 @@ namespace PlayerSettings
         private static void MigrateUsers()
         {
             var res = sqlite.Query($"SELECT `id`,`steam` FROM `{PlayerSettingsCore.plugin.Config.DatabaseParams.Table}users`", []);
-            if (res.Count == 0)
+            if (res == null || res.Count == 0)
             {
                 Console.WriteLine("Nothing to migrate [users]");
                 Close();
@@ -49,8 +49,8 @@ namespace PlayerSettings
                 foreach (var row in res)
                 {
                     sql += "INSERT INTO `" + PlayerSettingsCore.plugin.Config.DatabaseParams.Table + "users` (`id`,`steam`) VALUES ({ARG}, '{ARG}'); ";
-                    args.Add(row[0]);
-                    args.Add(row[1]);
+                    args.Add(row[0]!);
+                    args.Add(row[1]!);
                     count++;
                     if (count % (res.Count / 10) == 0) PlayerSettingsCore.plugin.Logger.LogInformation($"Migrating... [{Math.Round((float)count / ((float)res.Count) * 100, MidpointRounding.ToPositiveInfinity)}%]");
                 }
@@ -64,7 +64,7 @@ namespace PlayerSettings
         private static void MigrateSettings()
         {
             var res = sqlite.Query($"SELECT `user_id`,`param`,`value` FROM `{PlayerSettingsCore.plugin.Config.DatabaseParams.Table}values`", []);
-            if (res.Count > 0)
+            if (res != null && res.Count > 0)
             {
                 PlayerSettingsCore.plugin.Logger.LogInformation("Migrating settings...");
                 var sql = "";
@@ -73,9 +73,9 @@ namespace PlayerSettings
                 foreach (var row in res)
                 {
                     sql += $"INSERT INTO `" + PlayerSettingsCore.plugin.Config.DatabaseParams.Table + "values` (`user_id`,`param`, `value`) VALUES ({ARG}, '{ARG}', '{ARG}'); ";
-                    args.Add(row[0]);
-                    args.Add(row[1]);
-                    args.Add(row[2]);
+                    args.Add(row[0]!);
+                    args.Add(row[1]!);
+                    args.Add(row[2]!);
                     count++;
                     if(count % (res.Count/10) == 0) PlayerSettingsCore.plugin.Logger.LogInformation($"Migrating... [{Math.Round((float)count / ((float)res.Count) * 100, MidpointRounding.ToPositiveInfinity)}%]");
                 }

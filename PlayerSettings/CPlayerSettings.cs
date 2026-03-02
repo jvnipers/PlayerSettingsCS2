@@ -24,7 +24,7 @@ namespace PlayerSettings
 
         public string GetValue(string param, string default_value)
         {
-            string value;
+            string? value;
             if(!cached_values.TryGetValue(param, out value) || value == null)
             {              
                 value = default_value;
@@ -50,13 +50,16 @@ namespace PlayerSettings
             return player == _player;
         }
 
-        internal void ParseLoadedSettings(List<List<string>> rows, List<Action<CCSPlayerController>> actions)
+        internal void ParseLoadedSettings(List<List<string?>> rows, List<Action<CCSPlayerController>> actions)
         {
             Task.Run(() =>
             {
                 foreach (var row in rows)
                 {
-                    cached_values[row[0]] = row[1];
+                    var key = row[0];
+                    var val = row[1];
+                    if (key != null && val != null)
+                        cached_values[key] = val;
                 }
             }).ContinueWith((_) =>
             {
